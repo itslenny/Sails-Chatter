@@ -8,20 +8,21 @@ document.addEventListener("DOMContentLoaded",function(){
 
     var userName=prompt("What is your name?");
 
-    window.sendPrivateMsg=function(obj){
-        var msg = prompt("what would you like to say?");
-        var pData={toid: obj.getAttribute('href').substr(1),user:userName, body:msg};
-    
-        io.socket.post('/api/room/private',pData,function(data,jwrs){
+    //global function
+    chatViewList.addEventListener('click',function(event){
+        if(event.target && hasClass(event.target,'user-link')){
+            var msg = prompt("what would you like to say?");
+            var pData={toid: obj.getAttribute('href').substr(1),user:userName, body:msg};
+            io.socket.post('/api/room/private',pData,function(data,jwrs){
 
-        });        
-        return false;
-    }
+            });
+        }
+    });
 
     var addItemToChat=function(item){
         var newItem = document.createElement('li');
         if(item.socket){
-            newItem.innerHTML='<i>'+item.createdAt+'</i> <a href="#'+item.socket+'" onclick="return sendPrivateMsg(this);">'+item.user+':</a> '+item.body;
+            newItem.innerHTML='<i>'+item.createdAt+'</i> <a href="#'+item.socket+'" class="user-link">'+item.user+':</a> '+escapeHtml(item.body);
         }else{
             newItem.innerHTML='<i>'+item.createdAt+'</i> <b>'+item.user+':</b> '+item.body;
         }
@@ -54,5 +55,16 @@ document.addEventListener("DOMContentLoaded",function(){
             chatText.value="";
         })
     });
+
+    function hasClass(element,findClass){
+        return element.className.split(' ').indexOf(findClass) > -1
+    }
+
+    //from: http://shebang.brandonmintern.com/foolproof-html-escaping-in-javascript/
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
 
 });
