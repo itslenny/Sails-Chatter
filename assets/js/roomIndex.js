@@ -2,11 +2,9 @@ document.addEventListener("DOMContentLoaded",function(){
     var roomList = document.querySelector('#roomList');
     if(!roomList) return;
 
-
     io.socket.get('/api/room/join-lobby',function(data){
         data.forEach(addRoom);
     });
-
 
     io.socket.on('roomremove',function(data){
         var rooms = roomList.querySelectorAll('li a');

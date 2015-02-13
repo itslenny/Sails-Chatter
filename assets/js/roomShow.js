@@ -26,10 +26,12 @@ document.addEventListener("DOMContentLoaded",function(){
                 if(data.error){
                     alert(data.error);
                     return chooseUserName();
-                }else{
+                }else if(Array.isArray(data.users) && Array.isArray(data.messages)){
                     data.messages.forEach(addItemToChat)
                     data.users.forEach(addChatUser);
                     return true;
+                }else{
+                    location.href='/';
                 }
             }
         });
@@ -81,7 +83,7 @@ document.addEventListener("DOMContentLoaded",function(){
         var newItem = document.createElement('li');
         var socket = item.socketId || '';
         var name='<a href="#' + socket + '" class="user-link">' + escapeHtml(item.user) + '</a>';
-        var msgTime = '<i>'+item.createdAt+'</i>';
+        var msgTime = '<i>'+formatTime(item.createdAt)+'</i>';
 
         newItem.innerHTML = msgTime + ' ' + name + ': ' + escapeHtml(item.body);
         chatViewList.appendChild(newItem);
@@ -114,6 +116,11 @@ document.addEventListener("DOMContentLoaded",function(){
                 userItems[i].parentNode.parentNode.removeChild(userItems[i].parentNode);
             }
         };
+    }
+
+    function formatTime(dateString){
+        var dateObj = new Date(dateString);
+        return dateObj.toLocaleTimeString();
     }
 
     //determines if an element has a class
