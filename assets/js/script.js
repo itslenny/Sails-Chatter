@@ -10,11 +10,15 @@ document.addEventListener("DOMContentLoaded",function(){
 
     //global function
     chatViewList.addEventListener('click',function(event){
-        if(event.target && hasClass(event.target,'user-link')){
+        if(event.target && event.target.tagName.toLowerCase() === 'a' && hasClass(event.target,'user-link')){
+            event.preventDefault();
             var msg = prompt("what would you like to say?");
-            var pData={toid: obj.getAttribute('href').substr(1),user:userName, body:msg};
+            var toId=event.target.getAttribute('href').substr(1);
+            var pData={toid:toId ,user:userName, body:msg};
             io.socket.post('/api/room/private',pData,function(data,jwrs){
-
+                if(!data && !data.result){
+                    alert("Error. Unable to send message.")
+                }
             });
         }
     });
