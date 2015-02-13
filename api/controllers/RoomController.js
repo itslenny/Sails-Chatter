@@ -11,13 +11,7 @@ module.exports = {
 
     // get /
 	index:function(req,res){
-        
-        Room.find().populate('users').then(function(rooms){
-            res.view('room/index',{rooms:rooms});
-        }).catch(function(err){
-            sails.log.error(err);
-            res.view('room/index',{rooms:[],error:err});
-        });
+        res.view('room/index');
     },
 
     // get /room/:roomid
@@ -35,6 +29,7 @@ module.exports = {
     newRoom:function(req,res){
         Room.findOrCreate({where:{name:req.body.name}},{name:req.body.name})
         .then(function(room){
+            room.userCount=0;
             sails.sockets.broadcast('lobby','roomadd',room);                                            
             res.redirect('/room/'+room.id);
         }).catch(function(err){
@@ -46,8 +41,18 @@ module.exports = {
     //// API //////
 
     joinLobby:function(req,res){
-        sails.sockets.join(req.socket,'lobby');
-        res.send({result:true});
+        Room.find().populate('users').then(function(rooms){
+            sails.sockets.join(req.socket,'lobby');
+            rooms = rooms.map(function(room){
+                room.userCount = room.users.length;
+                delete room.users
+                return room;
+            });
+            res.send(rooms);
+        }).catch(function(err){
+            sails.log.error(err);
+            res.send(err);
+        });
     },
 
     // post /room/join
@@ -61,10 +66,12 @@ module.exports = {
             User.create({name:req.body.user,socketId:req.socket.id,room:roomId})
             .then(function(user){
                 sails.sockets.broadcast('chat_'+roomId,'userjoin',user);
+                sails.sockets.broadcast('lobby','userjoin',{id:roomId});
                 sails.sockets.join(req.socket,'chat_'+roomId);
 
                 req.socket.on('disconnect',function(){
                     sails.sockets.broadcast('chat_'+roomId,'userleave',user);
+                    sails.sockets.broadcast('lobby','userleave',{id:roomId});
                     User.destroy(user.id).exec(function(err){
                         if(err) sails.log.error(err);
                         User.count({where:{'room':roomId}})

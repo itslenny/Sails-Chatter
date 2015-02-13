@@ -35,14 +35,14 @@
     margin: 0;
 }
 
-#roomList ul li{
+#roomList li{
     padding: 5px;
 }
 
-#roomList ul li:nth-child(even){
+#roomList li:nth-child(even){
     background: #DDDDDD;
 }
 
-#roomList ul li:nth-child(odd){
+#roomList li:nth-child(odd){
     background: #EEEEEE;
 }

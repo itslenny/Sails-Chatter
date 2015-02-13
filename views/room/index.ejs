@@ -7,10 +7,6 @@
             </div>
             <input value="Create Room" type="submit" class="btn btn-primary">
         </form>
-        <ul id="roomList">
-            <% rooms.forEach(function(room){ %>
-                <li><a href="/room/<%= room.id %>"><%= room.name %></a> (<%= room.users.length %> users)</li>
-            <% }); %>
-        </ul>
+        <ul id="roomList"></ul>
     </div>
 </div>

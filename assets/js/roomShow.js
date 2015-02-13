@@ -78,7 +78,6 @@ document.addEventListener("DOMContentLoaded",function(){
     }
 
     function addChatUser(user,announce){
-        console.log(user);
         var name = '<a href="#' + user.socketId + '">' + escapeHtml(user.name) + '</a>';
         var userItem = document.createElement('li');
         userItem.innerHTML=name;
@@ -93,7 +92,6 @@ document.addEventListener("DOMContentLoaded",function(){
     }
 
     function removeChatUser(user){
-        console.log('hi');
         var userItems = chatUsers.querySelectorAll('a');
         for(var i = 0; i < userItems.length; i++){
             if(userItems[i].hash=='#'+user.socketId){
