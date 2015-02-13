@@ -14,9 +14,13 @@ module.exports = {
         unique: true
     },
 
-    //associations
+    //// associations
     messages:{
         collection:'Message',
+        via:'room'
+    },
+    users:{
+        collection:'User',
         via:'room'
     }
   }

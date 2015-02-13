@@ -14,6 +14,7 @@ module.exports = {
         Room.find().then(function(rooms){
             res.view('room/index',{rooms:rooms});
         }).catch(function(err){
+            sails.log.error(err);
             res.view('room/index',{rooms:[],error:err});
         });
     },
@@ -24,6 +25,7 @@ module.exports = {
         .then(function(room){
             res.view('room/show',{room:room});
         }).catch(function(err){
+            sails.log.error(err);
             res.view('room/show',{room:{},error:err});
         });
     },
@@ -32,13 +34,43 @@ module.exports = {
 
     // post /room/join
     join:function(req,res){
-        sails.sockets.join(req.socket,'chat_'+req.body.roomid);
-        Room.findOne(req.body.roomid)
+        //find or create for new rooms
+        var roomId=req.body.roomid;
+        Room.findOne(roomId)
         .populate('messages')
+        .populate('users')
         .then(function(room){
-            var announce = {id:-1,createdAt:"--",user:"system",body:(req.body.user||'anon')+ " has joined the room."}
-            sails.sockets.broadcast('chat_'+req.body.roomid,'newmessage',announce);
-            res.send(room.messages)
+            User.create({name:req.body.user,socketId:req.socket.id,room:roomId})
+            .then(function(user){
+                sails.sockets.broadcast('chat_'+roomId,'userjoin',user);
+                sails.sockets.join(req.socket,'chat_'+roomId);
+
+                req.socket.on('disconnect',function(){
+                    sails.sockets.broadcast('chat_'+roomId,'userleave',user);
+                    User.destroy(user.id).exec(function(err){
+                        if(err) sails.log.error(err);
+                        User.count({where:{'room':roomId}})
+                        .then(function(count){
+                            if(count < 1){
+                                console.log(roomId);
+                                //self destruct
+                                Message.destroy({where:{room:roomId}}).exec(function(err){
+                                    sails.log.error(err);
+                                });
+                                Room.destroy({where:{id:roomId}}).exec(function(err){
+                                    sails.log.error(err);
+                                });                                
+                            }
+                        })
+                    });
+                });
+
+                room.users.push(user);
+                res.send(room);
+            }).catch(function(err){
+                sails.log.error(err);
+            });
+            
         }).catch(function(err){
             res.send([]);
         });        
@@ -57,6 +89,7 @@ module.exports = {
             sails.sockets.broadcast('chat_'+req.params.roomid,'newmessage',message);
             res.send(message);
         }).catch(function(err){
+            sails.log.error(err);
             res.send(400,err);
         })        
     },

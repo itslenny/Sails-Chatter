@@ -20,9 +20,12 @@ module.exports = {
         type:'string'
     },
 
-    //associations
+    //// associations
     room:{
         model:'Room'
+    },
+    owner:{
+        model:'User'
     }
   }
 };
