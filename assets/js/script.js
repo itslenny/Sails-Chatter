@@ -1,14 +1,36 @@
 document.addEventListener("DOMContentLoaded",function(){
+
+    //load room data
+    var room = window.ROOM_DATA;    
+    if(!window.ROOM_DATA) return;
+
+    //find dom elements
     var chatView = document.querySelector('#chatView');
-    if(!chatView) return;
-    var chatViewList = document.querySelector('#chatView ul');
+    var chatViewList = chatView.querySelector('ul');
     var chatText = document.querySelector('#chatText');
     var chatForm = document.querySelector('#chatForm');    
-    var room = window.ROOM_DATA;
 
+    //get username
     var userName=prompt("What is your name?");
 
-    //global function
+    //setup socket and get initial messages
+    io.socket.post('/api/room/join',{roomid:room.id,user:userName},function(data,jwrs){
+        if(data){
+            data.forEach(addItemToChat)
+        }
+    });
+
+    //listen for new messages
+    io.socket.on('newmessage',function(data){
+        addItemToChat(data);
+    })
+
+    //listen for private messages
+    io.socket.on('privatemessage',function(data){
+        alert('private message from ' + data.from + "\r\n\r\n" + data.text)
+    });    
+
+    //username click - send private message
     chatViewList.addEventListener('click',function(event){
         if(event.target && event.target.tagName.toLowerCase() === 'a' && hasClass(event.target,'user-link')){
             event.preventDefault();
@@ -23,32 +45,7 @@ document.addEventListener("DOMContentLoaded",function(){
         }
     });
 
-    var addItemToChat=function(item){
-        var newItem = document.createElement('li');
-        if(item.socket){
-            newItem.innerHTML='<i>'+item.createdAt+'</i> <a href="#'+item.socket+'" class="user-link">'+item.user+':</a> '+escapeHtml(item.body);
-        }else{
-            newItem.innerHTML='<i>'+item.createdAt+'</i> <b>'+item.user+':</b> '+item.body;
-        }
-        
-        chatViewList.appendChild(newItem);
-        chatView.scrollTop=chatView.scrollHeight;
-    }
-
-    io.socket.on('newmessage',function(data){
-        addItemToChat(data);
-    })
-
-    io.socket.on('privatemessage',function(data){
-        alert('private message from ' + data.from + "\r\n\r\n" + data.text)
-    });
-
-    io.socket.post('/api/room/join',{roomid:room.id,user:userName},function(data,jwrs){
-        if(data){
-            data.forEach(addItemToChat)
-        }
-    });
-
+    //send chat message
     chatForm.addEventListener('submit',function(event){
         event.preventDefault();
         var msgData={
@@ -60,6 +57,20 @@ document.addEventListener("DOMContentLoaded",function(){
         })
     });
 
+    //insert new chat message
+    function addItemToChat(item){
+        var newItem = document.createElement('li');
+        if(item.socket){
+            newItem.innerHTML='<i>'+item.createdAt+'</i> <a href="#'+item.socket+'" class="user-link">'+item.user+':</a> '+escapeHtml(item.body);
+        }else{
+            newItem.innerHTML='<i>'+item.createdAt+'</i> <b>'+item.user+':</b> '+item.body;
+        }
+        
+        chatViewList.appendChild(newItem);
+        chatView.scrollTop=chatView.scrollHeight;
+    }
+
+    //determines if an element has a class
     function hasClass(element,findClass){
         return element.className.split(' ').indexOf(findClass) > -1
     }
