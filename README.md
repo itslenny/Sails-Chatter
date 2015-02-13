@@ -1,3 +1,3 @@
-# Chatter
+# Sails Chatter
 
-a [Sails](http://sailsjs.org) application
+A very simple real-time chat app using [Sails.js](http://sailsjs.org) and socket.io.
