@@ -20,11 +20,11 @@ document.addEventListener("DOMContentLoaded",function(){
 
     io.socket.on('roomadd',addRoom);
 
-    io.socket.on('userjoin',function(data){
+    io.socket.on('useradded',function(data){
         changeUserCount(data.id,1);
     });
 
-    io.socket.on('userleave',function(data){
+    io.socket.on('userremoved',function(data){
         changeUserCount(data.id,-1);
     });
 

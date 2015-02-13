@@ -11,16 +11,30 @@ document.addEventListener("DOMContentLoaded",function(){
     var chatForm = document.querySelector('#chatForm');    
     var chatUsers = document.querySelector('#chatUsers');
 
-    //get username
-    var userName=prompt("What is your name?");
+    function chooseUserName(){
+        //get username
+        var userName=prompt("What is your name?");
 
-    //setup socket and get initial messages
-    io.socket.post('/api/room/join',{roomid:room.id,user:userName},function(data,jwrs){
-        if(data){
-            data.messages.forEach(addItemToChat)
-            data.users.forEach(addChatUser);
+        if(userName.length < 2 || userName.length > 15){
+            alert('Invalid name (must be between 2 and 15 characters)');
+            return chooseUserName();
         }
-    });
+
+        //setup socket and get initial messages
+        io.socket.post('/api/room/join',{roomid:room.id,user:userName},function(data,jwrs){
+            if(data){
+                if(data.error){
+                    alert(data.error);
+                    return chooseUserName();
+                }else{
+                    data.messages.forEach(addItemToChat)
+                    data.users.forEach(addChatUser);
+                    return true;
+                }
+            }
+        });
+    }
+    chooseUserName();
 
     //listen for user changes
     io.socket.on('userleave',removeChatUser)    
@@ -33,13 +47,13 @@ document.addEventListener("DOMContentLoaded",function(){
     io.socket.on('privatemessage',showPrivateMessage);    
 
     //username click - send private message
-    chatViewList.addEventListener('click',function(event){
+    function sendPrivateMessage(event){
         if(event.target && event.target.tagName.toLowerCase() === 'a' && hasClass(event.target,'user-link')){
             event.preventDefault();
             var to=event.target.hash.substr(1);
             if(to){
                 var msg = prompt("what would you like to say?");                
-                var msgData={to:to ,user:userName, body:msg};
+                var msgData={to:to, body:msg};
                 io.socket.post('/api/room/private',msgData,function(data,jwrs){
                     if(!data || !data.result){
                         alert(data.error || "Unkonwn Error");
@@ -47,14 +61,15 @@ document.addEventListener("DOMContentLoaded",function(){
                 });
             }
         }
-    });
+    };
+    chatUsers.addEventListener('click',sendPrivateMessage);
+    chatViewList.addEventListener('click',sendPrivateMessage);
 
     //send chat message
     chatForm.addEventListener('submit',function(event){
         event.preventDefault();
         var msgData={
-            body:chatText.value,
-            user:userName
+            body:chatText.value
         };
         io.socket.post('/api/room/'+room.id+'/messages',msgData,function(data,jwrs){
             chatText.value="";
@@ -78,7 +93,7 @@ document.addEventListener("DOMContentLoaded",function(){
     }
 
     function addChatUser(user,announce){
-        var name = '<a href="#' + user.socketId + '">' + escapeHtml(user.name) + '</a>';
+        var name = '<a href="#' + user.socketId + '" class="user-link">' + escapeHtml(user.name) + '</a>';
         var userItem = document.createElement('li');
         userItem.innerHTML=name;
         chatUsers.appendChild(userItem);

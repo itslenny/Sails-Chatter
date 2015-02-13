@@ -18,6 +18,7 @@ module.exports = {
     show:function(req,res){
         Room.findOne(req.params.roomid)
         .then(function(room){
+            if(!room) return res.redirect('/');
             res.view('room/show',{room:room});
         }).catch(function(err){
             sails.log.error(err);
@@ -63,27 +64,33 @@ module.exports = {
         .populate('messages')
         .populate('users')
         .then(function(room){
+            
+            var dupeUser=_.any(room.users,{name:req.body.user});
+            if(dupeUser){
+                return res.send({error:'This username is already in use. Please choose another.'});
+            }
+
             User.create({name:req.body.user,socketId:req.socket.id,room:roomId})
             .then(function(user){
                 sails.sockets.broadcast('chat_'+roomId,'userjoin',user);
-                sails.sockets.broadcast('lobby','userjoin',{id:roomId});
+                sails.sockets.broadcast('lobby','useradded',{id:roomId});
                 sails.sockets.join(req.socket,'chat_'+roomId);
 
                 req.socket.on('disconnect',function(){
                     sails.sockets.broadcast('chat_'+roomId,'userleave',user);
-                    sails.sockets.broadcast('lobby','userleave',{id:roomId});
+                    sails.sockets.broadcast('lobby','userremoved',{id:roomId});
                     User.destroy(user.id).exec(function(err){
-                        if(err) sails.log.error(err);
+                        if(err) return sails.log.error(err);
                         User.count({where:{'room':roomId}})
                         .then(function(count){
                             if(count < 1){
                                 //self destruct
                                 sails.sockets.broadcast('lobby','roomremove',{id:roomId});                                
                                 Message.destroy({where:{room:roomId}}).exec(function(err){
-                                    sails.log.error(err);
+                                    if(err) sails.log.error(err);
                                 });
                                 Room.destroy({where:{id:roomId}}).exec(function(err){
-                                    sails.log.error(err);
+                                    if(err) sails.log.error(err);
                                 });                                
                             }
                         })
@@ -103,31 +110,43 @@ module.exports = {
 
     // post /post/:roomid/messages
     addMessage:function(req,res){
-        var msgData={
-            body:req.body.body,
-            user:req.body.user,
-            room:req.params.roomid,
-            socketId:req.socket.id
-        };
-        Message.create(msgData)
-        .then(function(message){
-            sails.sockets.broadcast('chat_'+req.params.roomid,'newmessage',message);
-            res.send(message);
+        User.findOne({socketId:req.socket.id})
+        .then(function(user){        
+            var msgData={
+                body:req.body.body,
+                user:user.name,
+                room:req.params.roomid,
+                socketId:req.socket.id
+            };
+            Message.create(msgData)
+            .then(function(message){
+                sails.sockets.broadcast('chat_'+req.params.roomid,'newmessage',message);
+                res.send(message);
+            }).catch(function(err){
+                sails.log.error(err);
+                res.send(400,err);
+            })        
         }).catch(function(err){
             sails.log.error(err);
             res.send(400,err);
-        })        
+        });
     },
 
     // post /api/send/private
     sendPrivate:function(req,res){
-        var subscribers = sails.sockets.subscribers(req.body.room);
-        if(subscribers.indexOf(req.body.to) > -1){
-            sails.sockets.emit(req.body.to,'privatemessage',{from:req.body.user,text:req.body.body});            
-            res.send({result:true});            
-        }else{
-            res.send({result:false, error:'This user left the room.'});
-        }
+        User.findOne({socketId:req.socket.id})
+        .then(function(user){
+            var subscribers = sails.sockets.subscribers(req.body.room);
+            if(subscribers.indexOf(req.body.to) > -1){
+                sails.sockets.emit(req.body.to,'privatemessage',{from:user.name,text:req.body.body});
+                res.send({result:true});            
+            }else{
+                res.send({result:false, error:'This user left the room.'});
+            }
+        }).catch(function(err){
+            res.send({result:false,error:err});
+        })
+
 
     }
 };
