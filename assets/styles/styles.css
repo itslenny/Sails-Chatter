@@ -1,0 +1,34 @@
+#chatView{
+    height: 300px;
+    background: #EEEEEE;
+    border: 1px solid #888888;
+    overflow-y: scroll;
+    margin-bottom: 20px;
+}
+
+.form-inline .form-control{
+    width: 86%;
+}
+
+#chatView ul{
+    list-style:none;
+    padding: 0;
+    margin: 0;
+}
+
+#chatView ul li{
+    padding: 5px;
+    margin: 0px;
+}
+
+#chatView ul li i{
+    opacity: 0.6;
+}
+
+#chatView ul li:nth-child(even){
+    background: #DDDDDD;
+}
+
+#chatView ul li:nth-child(odd){
+    background: #EEEEEE;
+}

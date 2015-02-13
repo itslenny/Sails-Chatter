@@ -1,0 +1,10 @@
+<h1>Room List</h1>
+<div class="row">
+    <div class="col-sm-4">
+        <ul>
+            <% rooms.forEach(function(room){ %>
+                <li><a href="/room/<%= room.id %>"><%= room.name %></a></li>
+            <% }); %>
+        </ul>
+    </div>
+</div>

@@ -1,0 +1,19 @@
+<script>
+window.ROOM_DATA = <%- JSON.stringify(room) %>
+</script>
+<h1>Room <small><%= room.name %></small></h1>
+
+<div class="row">
+    <div class="col-sm-8">
+        <div id="chatView">
+            <ul></ul>
+        </div>
+        <form id="chatForm" class="form-inline">
+            <input id="chatText" type="text" placeholder="Enter message here" class="form-control">
+            <input id="chatBtn" type="submit" class="btn btn-primary">
+        </form>
+    </div>
+    <div class="col-sm-4">
+        <h3>Users</h3>
+    </div>
+</div>
