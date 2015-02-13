@@ -7,6 +7,9 @@
 
 module.exports = {
 
+    //// VIEWS /////
+
+    // get /
 	index:function(req,res){
         Room.find().then(function(rooms){
             res.view('room/index',{rooms:rooms});
@@ -14,16 +17,22 @@ module.exports = {
             res.view('room/index',{rooms:[],error:err});
         });
     },
+
+    // get /room/:roomid
     show:function(req,res){
         Room.findOne(req.params.roomid)
         .then(function(room){
-            // res.send(room);
             res.view('room/show',{room:room});
         }).catch(function(err){
             res.view('room/show',{room:{},error:err});
         });
     },
+
+    //// API //////
+
+    // post /room/join
     join:function(req,res){
+        console.log(req.body);
         sails.sockets.join(req.socket,'chat_'+req.body.roomid);
         Room.findOne(req.body.roomid)
         .populate('messages')
@@ -35,6 +44,8 @@ module.exports = {
             res.send([]);
         });        
     },
+
+    // post /post/:roomid/messages
     addMessage:function(req,res){
         var msgData={
             body:req.body.body,
@@ -50,8 +61,10 @@ module.exports = {
             res.send(400,err);
         })        
     },
+
+    // post /api/send/private
     sendPrivate:function(req,res){
-        sails.sockets.emit(req.body.toid,'privatemessage',{from:req.body.user,text:req.body.body});
+        sails.sockets.emit(req.body.to,'privatemessage',{from:req.body.user,text:req.body.body});
         res.send({result:true});
     }
 };
