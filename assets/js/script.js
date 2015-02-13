@@ -34,14 +34,16 @@ document.addEventListener("DOMContentLoaded",function(){
     chatViewList.addEventListener('click',function(event){
         if(event.target && event.target.tagName.toLowerCase() === 'a' && hasClass(event.target,'user-link')){
             event.preventDefault();
-            var msg = prompt("what would you like to say?");
             var to=event.target.getAttribute('href').substr(1);
-            var msgData={to:to ,user:userName, body:msg};
-            io.socket.post('/api/room/private',msgData,function(data,jwrs){
-                if(!data && !data.result){
-                    alert("Error. Unable to send message.")
-                }
-            });
+            if(to){
+                var msg = prompt("what would you like to say?");                
+                var msgData={to:to ,user:userName, body:msg};
+                io.socket.post('/api/room/private',msgData,function(data,jwrs){
+                    if(!data || !data.result){
+                        alert(data.error || "Unkonwn Error");
+                    }
+                });
+            }
         }
     });
 
@@ -60,12 +62,11 @@ document.addEventListener("DOMContentLoaded",function(){
     //insert new chat message
     function addItemToChat(item){
         var newItem = document.createElement('li');
-        if(item.socket){
-            newItem.innerHTML='<i>'+item.createdAt+'</i> <a href="#'+item.socket+'" class="user-link">'+item.user+':</a> '+escapeHtml(item.body);
-        }else{
-            newItem.innerHTML='<i>'+item.createdAt+'</i> <b>'+item.user+':</b> '+item.body;
-        }
-        
+        var socket = item.socketId || '';
+        var name='<a href="#' + socket + '" class="user-link">' + item.user + '</a>';
+        var msgTime = '<i>'+item.createdAt+'</i>';
+
+        newItem.innerHTML = msgTime + ' ' + name + ': ' + escapeHtml(item.body);
         chatViewList.appendChild(newItem);
         chatView.scrollTop=chatView.scrollHeight;
     }

@@ -32,7 +32,6 @@ module.exports = {
 
     // post /room/join
     join:function(req,res){
-        console.log(req.body);
         sails.sockets.join(req.socket,'chat_'+req.body.roomid);
         Room.findOne(req.body.roomid)
         .populate('messages')
@@ -50,11 +49,11 @@ module.exports = {
         var msgData={
             body:req.body.body,
             user:req.body.user,
-            room:req.params.roomid
+            room:req.params.roomid,
+            socketId:req.socket.id
         };
         Message.create(msgData)
         .then(function(message){
-            message.socket=req.socket.id;
             sails.sockets.broadcast('chat_'+req.params.roomid,'newmessage',message);
             res.send(message);
         }).catch(function(err){
@@ -64,8 +63,14 @@ module.exports = {
 
     // post /api/send/private
     sendPrivate:function(req,res){
-        sails.sockets.emit(req.body.to,'privatemessage',{from:req.body.user,text:req.body.body});
-        res.send({result:true});
+        var subscribers = sails.sockets.subscribers(req.body.room);
+        if(subscribers.indexOf(req.body.to) > -1){
+            sails.sockets.emit(req.body.to,'privatemessage',{from:req.body.user,text:req.body.body});            
+            res.send({result:true});            
+        }else{
+            res.send({result:false, error:'This user left the room.'});
+        }
+
     }
 };
 

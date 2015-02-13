@@ -16,6 +16,9 @@ module.exports = {
         type:'string',
         defaultsTo:'Anonymous'
     },
+    socketId:{
+        type:'string'
+    },
 
     //associations
     room:{
