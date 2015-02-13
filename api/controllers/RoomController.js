@@ -11,7 +11,8 @@ module.exports = {
 
     // get /
 	index:function(req,res){
-        Room.find().then(function(rooms){
+        
+        Room.find().populate('users').then(function(rooms){
             res.view('room/index',{rooms:rooms});
         }).catch(function(err){
             sails.log.error(err);
@@ -30,7 +31,24 @@ module.exports = {
         });
     },
 
+    // post /room
+    newRoom:function(req,res){
+        Room.findOrCreate({where:{name:req.body.name}},{name:req.body.name})
+        .then(function(room){
+            sails.sockets.broadcast('lobby','roomadd',room);                                            
+            res.redirect('/room/'+room.id);
+        }).catch(function(err){
+            sails.log.error(err);
+            res.redirect('/');
+        })
+    },
+
     //// API //////
+
+    joinLobby:function(req,res){
+        sails.sockets.join(req.socket,'lobby');
+        res.send({result:true});
+    },
 
     // post /room/join
     join:function(req,res){
@@ -52,8 +70,8 @@ module.exports = {
                         User.count({where:{'room':roomId}})
                         .then(function(count){
                             if(count < 1){
-                                console.log(roomId);
                                 //self destruct
+                                sails.sockets.broadcast('lobby','roomremove',{id:roomId});                                
                                 Message.destroy({where:{room:roomId}}).exec(function(err){
                                     sails.log.error(err);
                                 });

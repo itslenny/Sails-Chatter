@@ -8,10 +8,16 @@ window.ROOM_DATA = <%- JSON.stringify(room) %>
         <div id="chatView">
             <ul></ul>
         </div>
-        <form id="chatForm" class="form-inline">
-            <input id="chatText" type="text" placeholder="Enter message here" class="form-control">
-            <input id="chatBtn" type="submit" class="btn btn-primary">
+        <div>
+        <form id="chatForm" class="form">
+            <div class="input-group">
+                <input id="chatText" type="text" placeholder="Enter message here" class="form-control">
+                <span class="input-group-btn">
+                    <input id="chatBtn" value="Send" class="btn btn-success" type="submit">
+                </span>
+            </div>        
         </form>
+        </div>
     </div>
     <div class="col-sm-4">
         <h4>Users</h4>

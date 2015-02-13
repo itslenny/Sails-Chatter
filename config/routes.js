@@ -23,12 +23,15 @@
 module.exports.routes = {
 
   //views
-  '/': "RoomController.index",
-  '/room/:roomid':"RoomController.show",
+  'get /': "RoomController.index",
+  'get /room/:roomid':"RoomController.show",
+
+  'post /room':"RoomController.newRoom",
 
   //api
-  '/api/room/join':"RoomController.join",
+  'post /api/room/join':"RoomController.join",
   'post /api/room/:roomid/messages':"RoomController.addMessage",
-  'post /api/room/private':"RoomController.sendPrivate"
+  'post /api/room/private':"RoomController.sendPrivate",
+  'get /api/room/join-lobby':'RoomController.joinLobby'
 
 };

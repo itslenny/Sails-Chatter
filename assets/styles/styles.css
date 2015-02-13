@@ -6,10 +6,6 @@
     margin-bottom: 20px;
 }
 
-.form-inline .form-control{
-    width: 86%;
-}
-
 #chatView ul{
     list-style:none;
     padding: 0;
@@ -30,5 +26,23 @@
 }
 
 #chatView ul li:nth-child(odd){
+    background: #EEEEEE;
+}
+
+#roomList{
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#roomList ul li{
+    padding: 5px;
+}
+
+#roomList ul li:nth-child(even){
+    background: #DDDDDD;
+}
+
+#roomList ul li:nth-child(odd){
     background: #EEEEEE;
 }

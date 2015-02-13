@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded",function(){
     function addItemToChat(item){
         var newItem = document.createElement('li');
         var socket = item.socketId || '';
-        var name='<a href="#' + socket + '" class="user-link">' + item.user + '</a>';
+        var name='<a href="#' + socket + '" class="user-link">' + escapeHtml(item.user) + '</a>';
         var msgTime = '<i>'+item.createdAt+'</i>';
 
         newItem.innerHTML = msgTime + ' ' + name + ': ' + escapeHtml(item.body);
@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded",function(){
 
     function addChatUser(user,announce){
         console.log(user);
-        var name = '<a href="#' + user.socketId + '">' + user.name + '</a>';
+        var name = '<a href="#' + user.socketId + '">' + escapeHtml(user.name) + '</a>';
         var userItem = document.createElement('li');
         userItem.innerHTML=name;
         chatUsers.appendChild(userItem);
